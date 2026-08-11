@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Understudy — shadow the job before you apply</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="page">
+
+  <!-- ================= masthead ================= -->
+  <header class="masthead">
+    <div>
+      <div class="brand">
+        <span class="mark" aria-hidden="true"></span>
+        <span class="wordmark">Understudy</span>
+      </div>
+      <p class="tagline">Paste a job posting. Watch someone who actually holds that job work through an ordinary task, and say out loud what they were trained to know.</p>
+    </div>
+    <span class="mockup-tag">Prototype</span>
+  </header>
+
+  <!-- ================= 1. the posting ================= -->
+  <section class="card posting">
+    <div class="step">
+      <span class="step-num">1</span>
+      <span class="step-label">The posting</span>
+    </div>
+
+    <div class="tabs" role="tablist" aria-label="How to supply the job posting">
+      <button class="tab" role="tab" id="tab-url" aria-selected="true" aria-controls="panel-url">LinkedIn URL</button>
+      <button class="tab" role="tab" id="tab-paste" aria-selected="false" aria-controls="panel-paste">Paste description</button>
+    </div>
+
+    <div id="panel-url" role="tabpanel" aria-labelledby="tab-url">
+      <div class="field">
+        <label class="url-wrap">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.8 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.8-1.7"/></svg>
+          <input type="url" id="url-input" placeholder="https://www.linkedin.com/jobs/view/…" aria-label="LinkedIn job posting URL" spellcheck="false">
+        </label>
+        <button class="mini-btn" id="read-btn" type="button">Read posting</button>
+      </div>
+      <div class="resolved hidden" id="resolved">
+        <span class="logo" aria-hidden="true" id="resolved-logo"></span>
+        <span>
+          <span class="who" id="resolved-who"></span><br>
+          <span class="where" id="resolved-where"></span>
+        </span>
+        <span class="pill" id="resolved-pill">Posting read</span>
+      </div>
+      <div class="resolved resolved--error hidden" id="fetch-error">
+        <span class="logo" aria-hidden="true">!</span>
+        <span>
+          <span class="who" id="fetch-error-msg"></span><br>
+          <span class="where">
+            <button class="linkish" id="err-paste">Paste the description instead</button>
+            &nbsp;·&nbsp;
+            <button class="linkish" id="err-fixture">load a saved posting below</button>
+          </span>
+          <span class="attempts" id="fetch-error-attempts"></span>
+        </span>
+      </div>
+      <p class="input-hint hidden" id="url-hint"></p>
+    </div>
+
+    <div id="panel-paste" role="tabpanel" aria-labelledby="tab-paste" class="hidden">
+      <textarea class="paste" id="paste-input" placeholder="Paste the full job description here — responsibilities, required certifications, systems, the lot. The more of the posting you include, the more specific the shadowing session gets."></textarea>
+      <p class="input-hint hidden" id="paste-hint"></p>
+    </div>
+
+    <div class="fixture-row" id="fixture-row">
+      <span>No network? Load a saved posting:</span>
+    </div>
+  </section>
+
+  <!-- ================= 2. the two knobs ================= -->
+  <section class="card console">
+    <div class="console-head">
+      <div>
+        <div class="step" style="margin-bottom:6px">
+          <span class="step-num">2</span>
+          <span class="step-label">How you want to watch</span>
+        </div>
+        <h2>Set the room</h2>
+      </div>
+      <p>Two settings decide everything<br>about the session.</p>
+    </div>
+
+    <div class="knobs">
+
+      <!-- knob one -->
+      <div class="knob" id="knob-expertise" data-tone="accent">
+        <div class="knob-head">
+          <span class="knob-name">Expertise level</span>
+          <span class="knob-value" id="exp-value">Orientation</span>
+        </div>
+
+        <div class="slider">
+          <span class="track"></span>
+          <span class="fill" id="exp-fill"></span>
+          <span class="ticks" id="exp-ticks"></span>
+          <input class="range" type="range" min="0" max="4" step="1" value="0"
+                 id="exp-range" aria-label="Expertise level"
+                 aria-valuetext="Orientation">
+          <span class="thumb" id="exp-thumb"></span>
+        </div>
+
+        <div class="stops" id="exp-stops"></div>
+
+        <p class="knob-desc" id="exp-desc"></p>
+      </div>
+
+      <!-- knob two -->
+      <div class="knob" id="knob-mode" data-tone="accent">
+        <div class="knob-head">
+          <span class="knob-name">Interaction mode</span>
+          <span class="knob-value" id="mode-value">Lecture</span>
+        </div>
+
+        <div class="slider">
+          <span class="track"></span>
+          <span class="fill" id="mode-fill"></span>
+          <span class="ticks" id="mode-ticks"></span>
+          <input class="range" type="range" min="0" max="4" step="1" value="0"
+                 id="mode-range" aria-label="Interaction mode"
+                 aria-valuetext="Lecture">
+          <span class="thumb" id="mode-thumb"></span>
+        </div>
+
+        <div class="stops" id="mode-stops"></div>
+
+        <p class="knob-desc" id="mode-desc"></p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= action ================= -->
+  <div class="actions">
+    <button class="go" type="button" id="go">
+      Begin shadowing
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13"/><path d="m13 6 6 6-6 6"/></svg>
+    </button>
+    <span class="note">A session runs a few minutes of reading. Change either setting afterward and the professional offers to run it again.</span>
+  </div>
+
+  <!-- ================= output ================= -->
+  <section class="card output">
+    <div class="out-head">
+      <span class="badge" id="out-badge">Preview</span>
+      <span class="what" id="out-what">Example of what a session looks like — nothing here is generated.</span>
+      <span class="setting" id="out-setting">sample: Orientation · Lecture</span>
+    </div>
+
+    <div class="rerun-banner hidden" id="rerun-banner">
+      <span id="rerun-text">Settings changed — re-run this posting?</span>
+      <button class="mini-btn" id="rerun-yes" type="button">Re-run</button>
+      <button class="mini-btn" id="rerun-no" type="button">Keep this output</button>
+    </div>
+
+    <!-- ---------- PREVIEW pane: the approved sample, shown until first generation ---------- -->
+    <div id="pane-preview">
+      <div class="persona">
+        <span class="avatar" aria-hidden="true">RA</span>
+        <span>
+          <span class="nm">Renée Alvarez</span><br>
+          <span class="rl">Project Manager, Store Operations · 9 years · PMP, CSM</span>
+        </span>
+      </div>
+
+      <div class="task-strip">
+        <strong>Today's task:</strong> opening a project to put a private-label patio line into 40 more stores before the spring reset.
+      </div>
+
+      <div class="body-grid">
+        <div class="narration">
+          <p class="step-marker">Step 1 of 6 · Getting authority</p>
+          <p>So I've just been handed the patio expansion, and the first thing I do is not plan anything — I write a <span class="term">charter</span>, which is the one-page document that formally says this project exists, who is paying for it, and who is allowed to say no to it. Because I hold a <span class="term">PMP</span> — the Project Management Professional credential from the Project Management Institute — I'm working out of a reference called the <span class="term">PMBOK Guide</span>, which files everything I'm doing right now under a phase it calls <span class="term">Initiating</span>; the whole point of that phase is to get authority in writing before I spend anybody else's time.</p>
+          <p>Practically, that means the next hour goes to naming stakeholders: merchandising, who owns what we sell; supply chain, who owns whether forty stores' worth of furniture can physically show up; store operations, who owns the payroll hours to build the display; and finance, who eats the markdown if none of it sells. Those four go into a <span class="term">stakeholder register</span>, and I score each one on how much power they have against how much they care — a two-by-two you'll hear called the <span class="term">power–interest grid</span> — because the person with a lot of power and no interest is the one who quietly kills this in week six.</p>
+        </div>
+
+        <aside class="rail">
+          <h3>Named so far</h3>
+          <p class="sub">Every term she used, unpacked in place.</p>
+          <ol>
+            <li><span class="t">Charter</span><span class="k">Artifact</span></li>
+            <li><span class="t">PMP</span><span class="k cred">Credential</span></li>
+            <li><span class="t">PMBOK Guide</span><span class="k">Standard</span></li>
+            <li><span class="t">Initiating</span><span class="k">Phase</span></li>
+            <li><span class="t">Stakeholder register</span><span class="k">Artifact</span></li>
+            <li><span class="t">Power–interest grid</span><span class="k">Framework</span></li>
+          </ol>
+          <p class="ahead"><b>Coming up in step 2</b><span>RACI matrix · work breakdown structure · critical path</span></p>
+        </aside>
+      </div>
+
+      <div class="legend">
+        <span class="swatch" aria-hidden="true"></span>
+        <span>Marked terms are ones she named and unpacked. At <em>Peer</em>, she assumes them and spends the time on tradeoffs instead.</span>
+      </div>
+    </div>
+
+    <!-- ---------- LIVE pane: real sessions render here ---------- -->
+    <div id="pane-live" class="hidden">
+      <div class="persona">
+        <span class="avatar" aria-hidden="true" id="live-avatar"></span>
+        <span>
+          <span class="nm" id="live-nm"></span><br>
+          <span class="rl" id="live-rl"></span>
+        </span>
+      </div>
+
+      <div class="task-strip" id="live-task"></div>
+
+      <div class="body-grid">
+        <div class="narration" id="narration"></div>
+
+        <aside class="rail">
+          <h3>Named so far</h3>
+          <p class="sub">Every term they use, unpacked in place. Click a kind to see what we mean by it.</p>
+          <ol id="rail-list"></ol>
+        </aside>
+      </div>
+
+      <div class="legend">
+        <span class="swatch" aria-hidden="true"></span>
+        <span>Marked terms were named and unpacked — click one to jump to its glossary entry.</span>
+      </div>
+    </div>
+
+    <div class="composer">
+      <div class="composer-row">
+        <input class="ask" id="ask" type="text" disabled placeholder="Questions are closed while she's narrating.">
+        <button class="send" id="send" type="button" disabled aria-label="Send question">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 12 13-7-4.5 13L12 13z"/></svg>
+        </button>
+      </div>
+      <div class="flag-chips hidden" id="flag-chips"></div>
+      <p class="composer-note" id="composer-note">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+        <span id="composer-note-text">Lecture mode — she runs start to finish and you stay out of it.</span>
+      </p>
+    </div>
+  </section>
+
+  <p class="footnote">Prototype · postings are fetched live or pasted · sessions are generated, so read them as illustration, not fact</p>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
