@@ -21,6 +21,8 @@
     <span class="mockup-tag">Prototype</span>
   </header>
 
+  <div class="trouble hidden" id="trouble"></div>
+
   <!-- ================= 1. the posting ================= -->
   <section class="card posting">
     <div class="step">
@@ -74,75 +76,49 @@
     </div>
   </section>
 
-  <!-- ================= 2. the two knobs ================= -->
-  <section class="card console">
-    <div class="console-head">
-      <div>
-        <div class="step" style="margin-bottom:6px">
-          <span class="step-num">2</span>
-          <span class="step-label">How you want to watch</span>
-        </div>
-        <h2>Set the room</h2>
-      </div>
-      <p>Two settings decide everything<br>about the session.</p>
+  <!-- ================= 2. about you ================= -->
+  <section class="card posting" id="survey-card">
+    <div class="step">
+      <span class="step-num">2</span>
+      <span class="step-label">About you</span>
     </div>
+    <div id="survey-questions"></div>
+  </section>
 
-    <div class="knobs">
-
-      <!-- knob one -->
-      <div class="knob" id="knob-expertise" data-tone="accent">
-        <div class="knob-head">
-          <span class="knob-name">Expertise level</span>
-          <span class="knob-value" id="exp-value">Orientation</span>
-        </div>
-
-        <div class="slider">
-          <span class="track"></span>
-          <span class="fill" id="exp-fill"></span>
-          <span class="ticks" id="exp-ticks"></span>
-          <input class="range" type="range" min="0" max="4" step="1" value="0"
-                 id="exp-range" aria-label="Expertise level"
-                 aria-valuetext="Orientation">
-          <span class="thumb" id="exp-thumb"></span>
-        </div>
-
-        <div class="stops" id="exp-stops"></div>
-
-        <p class="knob-desc" id="exp-desc"></p>
-      </div>
-
-      <!-- knob two -->
-      <div class="knob" id="knob-mode" data-tone="accent">
-        <div class="knob-head">
-          <span class="knob-name">Interaction mode</span>
-          <span class="knob-value" id="mode-value">Lecture</span>
-        </div>
-
-        <div class="slider">
-          <span class="track"></span>
-          <span class="fill" id="mode-fill"></span>
-          <span class="ticks" id="mode-ticks"></span>
-          <input class="range" type="range" min="0" max="4" step="1" value="0"
-                 id="mode-range" aria-label="Interaction mode"
-                 aria-valuetext="Lecture">
-          <span class="thumb" id="mode-thumb"></span>
-        </div>
-
-        <div class="stops" id="mode-stops"></div>
-
-        <p class="knob-desc" id="mode-desc"></p>
-      </div>
-
+  <!-- ================= 3. the deliverable ================= -->
+  <section class="card posting" id="task-card">
+    <div class="step">
+      <span class="step-num">3</span>
+      <span class="step-label">The deliverable</span>
     </div>
+    <p class="card-note">What they'll be working toward. They won't produce the finished thing — it's the destination that gives the session somewhere to go.</p>
+
+    <div class="task-choice">
+      <label class="task-opt">
+        <input type="radio" name="taskmode" value="auto" checked>
+        <span><b>Choose for me.</b> They pick something routine from the posting.</span>
+      </label>
+      <label class="task-opt">
+        <input type="radio" name="taskmode" value="pick">
+        <span><b>Choose from typical work.</b> <button class="mini-btn" id="suggest-btn" type="button">Suggest three</button></span>
+      </label>
+      <div class="task-list hidden" id="task-list"></div>
+      <label class="task-opt">
+        <input type="radio" name="taskmode" value="own">
+        <span><b>Name it yourself.</b></span>
+      </label>
+      <input type="text" class="ask task-own hidden" id="task-own" placeholder="e.g. Size a piece of work the team has never done before and defend the estimate">
+    </div>
+    <p class="input-hint hidden" id="task-hint"></p>
   </section>
 
   <!-- ================= action ================= -->
   <div class="actions">
     <button class="go" type="button" id="go">
-      Begin shadowing
+      Create Shadow
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13"/><path d="m13 6 6 6-6 6"/></svg>
     </button>
-    <span class="note">A session runs a few minutes of reading. Change either setting afterward and the professional offers to run it again.</span>
+    <span class="note">They work start to finish without stopping. Questions come after, in the box below the session.</span>
   </div>
 
   <!-- ================= output ================= -->
@@ -150,7 +126,7 @@
     <div class="out-head">
       <span class="badge" id="out-badge">Preview</span>
       <span class="what" id="out-what">Example of what a session looks like — nothing here is generated.</span>
-      <span class="setting" id="out-setting">sample: Orientation · Lecture</span>
+      <span class="setting" id="out-setting">sample: not at all familiar</span>
     </div>
 
     <div class="rerun-banner hidden" id="rerun-banner">
@@ -197,7 +173,7 @@
 
       <div class="legend">
         <span class="swatch" aria-hidden="true"></span>
-        <span>Marked terms are ones she named and unpacked. At <em>Peer</em>, she assumes them and spends the time on tradeoffs instead.</span>
+        <span>Marked terms are ones she named and unpacked. At <em>Practitioner</em>, she assumes them and spends the time on judgment calls instead.</span>
       </div>
     </div>
 
@@ -231,15 +207,14 @@
 
     <div class="composer">
       <div class="composer-row">
-        <input class="ask" id="ask" type="text" disabled placeholder="Questions are closed while she's narrating.">
+        <input class="ask" id="ask" type="text" disabled placeholder="Ask them anything about what you just watched…">
         <button class="send" id="send" type="button" disabled aria-label="Send question">
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 12 13-7-4.5 13L12 13z"/></svg>
         </button>
       </div>
-      <div class="flag-chips hidden" id="flag-chips"></div>
       <p class="composer-note" id="composer-note">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
-        <span id="composer-note-text">Lecture mode — she runs start to finish and you stay out of it.</span>
+        <span id="composer-note-text">Questions open once the session finishes.</span>
       </p>
     </div>
   </section>

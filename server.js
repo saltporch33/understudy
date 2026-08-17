@@ -17,13 +17,20 @@ const Anthropic = require("@anthropic-ai/sdk");
 const { KINDS, normalizeKind } = require("./lib/taxonomy");
 const { resolveLink } = require("./lib/links");
 const {
-  EXPERTISE,
-  MODES,
+  FAMILIARITY,
   buildSystemPrompt,
   buildUserMessage,
-  buildFollowupSystem
+  buildFollowupSystem,
+  DELIVERABLE_SUGGESTION_SYSTEM,
+  buildTaskSuggestionMessage
 } = require("./lib/prompts");
 const { resolveJob } = require("./lib/linkedin");
+const survey = require("./lib/survey");
+
+/* Bumped whenever the client and server must be restarted together. The page
+   compares this against its own copy and complains loudly if they differ —
+   which is what happens when files change but the server wasn't restarted. */
+const BUILD = "2026-08-15a";
 
 const PORT = process.env.PORT || 3000;
 const MODEL = process.env.MODEL || "claude-sonnet-4-5";
@@ -41,8 +48,12 @@ app.use(express.static(path.join(__dirname, "public")));
 app.get("/api/meta", (_req, res) => {
   res.json({
     kinds: KINDS,
-    expertise: EXPERTISE.map((e) => e.name),
-    modes: MODES.map((m) => m.name),
+    familiarity: FAMILIARITY.map((f) => f.name),
+    survey: {
+      questions: survey.QUESTIONS,
+      levelNames: survey.LEVEL_NAMES
+    },
+    build: BUILD,
     model: MODEL,
     keySet: keyLooksSet()
   });
@@ -168,16 +179,53 @@ function guardKey(res) {
   send(res, {
     type: "error",
     message:
-      "No API key is set on the server. Copy .env.example to .env, paste your ANTHROPIC_API_KEY, and restart with npm start."
+      "No API key is set on the server. Close the black Understudy window, delete env.txt from the app folder, and start it again — it will ask you for a key."
   });
   res.end();
   return false;
 }
 
+/* ---------------- task suggestions (the decision layer) ---------------- */
+
+app.post("/api/tasks", async (req, res) => {
+  const { job } = req.body || {};
+  if (!job || !job.description) return res.status(400).json({ error: "No posting supplied." });
+  if (!keyLooksSet()) {
+    return res.status(503).json({ error: "No API key is set on the server, so suggestions can't be generated. You can still name the deliverable yourself." });
+  }
+  try {
+    const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+    const msg = await client.messages.create({
+      model: MODEL,
+      max_tokens: 900,
+      temperature: 0.7,
+      system: DELIVERABLE_SUGGESTION_SYSTEM,
+      messages: [{ role: "user", content: buildTaskSuggestionMessage(job) }]
+    });
+    const text = (msg.content || []).map((c) => c.text || "").join("").trim();
+    const jsonText = text.replace(/^```(?:json)?\s*|\s*```$/g, "");
+    let parsed;
+    try {
+      parsed = JSON.parse(jsonText);
+    } catch {
+      console.warn("task suggestion did not parse:", text.slice(0, 200));
+      return res.status(502).json({ error: "The suggestions came back unreadable. Try again, or type a task yourself." });
+    }
+    const tasks = (parsed.tasks || [])
+      .filter((t) => t && t.task)
+      .slice(0, 3)
+      .map((t) => ({ label: String(t.label || "").trim(), task: String(t.task).trim() }));
+    res.json({ tasks });
+  } catch (e) {
+    console.error("task suggestion error:", e.message);
+    res.status(502).json({ error: `Couldn't suggest tasks: ${e.message}` });
+  }
+});
+
 /* ---------------- the session ---------------- */
 
 app.post("/api/shadow", async (req, res) => {
-  const { job, expertise = 0, mode = 0 } = req.body || {};
+  const { job, familiarity = 0, task = null, viewer = null } = req.body || {};
   if (!job || !job.description || String(job.description).trim().length < 40) {
     return res.status(400).json({ error: "No posting to work from — fetch a URL, paste a description, or load a fixture first." });
   }
@@ -185,7 +233,7 @@ app.post("/api/shadow", async (req, res) => {
   openSSE(res);
   try {
     await relayModelStream(res, {
-      system: buildSystemPrompt(expertise, mode),
+      system: buildSystemPrompt(familiarity, { task: task || null, viewer }),
       messages: [{ role: "user", content: buildUserMessage(job) }]
     });
   } catch (e) {
@@ -198,7 +246,7 @@ app.post("/api/shadow", async (req, res) => {
 /* ---------------- follow-ups (asides, checkpoints, dialogue, seminar) ---------------- */
 
 app.post("/api/followup", async (req, res) => {
-  const { job, expertise = 0, mode = 0, transcript = [], question, context } = req.body || {};
+  const { job, familiarity = 0, transcript = [], question, context, task = null, viewer = null } = req.body || {};
   if (!question || !job) return res.status(400).json({ error: "Missing question or job." });
   if (!guardKey(res)) return;
   openSSE(res);
@@ -215,7 +263,7 @@ app.post("/api/followup", async (req, res) => {
 
   try {
     await relayModelStream(res, {
-      system: buildFollowupSystem(expertise, mode),
+      system: buildFollowupSystem(familiarity, { task: task || null, viewer }),
       messages
     });
   } catch (e) {
